@@ -1,5 +1,6 @@
 from flask.ext.login import LoginManager, _cookie_digest, COOKIE_NAME
 from werkzeug import Request
+from werkzeug.security import safe_str_cmp
 
 
 def setup_login(app):
@@ -15,14 +16,14 @@ def decode_cookie(cookie):
 
     from router import SECRET_KEY
     try:
-        payload, digest = cookie.rsplit(u"|", 1)
-        digest = digest.encode("ascii")
+        payload, digest = cookie.rsplit(u'|', 1)
+        if hasattr(digest, 'decode'):
+            digest = digest.decode('ascii')
     except ValueError:
-        return None
-    if _cookie_digest(payload, SECRET_KEY) == digest:
+        return
+
+    if safe_str_cmp(_cookie_digest(payload, SECRET_KEY), digest):
         return payload
-    else:
-        return None
 
 
 def get_user(environ):
